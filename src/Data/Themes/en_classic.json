@@ -1,0 +1,63 @@
+{
+  "id": "en_classic",
+  "languageCode": "en-US",
+  "title": "English Countryside",
+  "description": "A classic puzzle set in a quaint English village.",
+  "categoryData": {
+    "person": {
+      "name": "Person",
+      "items": [
+        { "id": "p1", "name": "Mr. Smith", "icon": "person_smith" },
+        { "id": "p2", "name": "Mrs. Jones", "icon": "person_jones" },
+        { "id": "p3", "name": "Mr. Brown", "icon": "person_brown" },
+        { "id": "p4", "name": "Ms. White", "icon": "person_white" }
+      ]
+    },
+    "drink": {
+      "name": "Drink",
+      "items": [
+        { "id": "d1", "name": "Earl Grey", "icon": "drink_earl" },
+        { "id": "d2", "name": "Coffee", "icon": "drink_coffee" },
+        { "id": "d3", "name": "Milk", "icon": "drink_milk" },
+        { "id": "d4", "name": "Orange Juice", "icon": "drink_oj" }
+      ]
+    },
+    "pet": {
+      "name": "Pet",
+      "items": [
+        { "id": "a1", "name": "Dog", "icon": "pet_dog" },
+        { "id": "a2", "name": "Cat", "icon": "pet_cat" },
+        { "id": "a3", "name": "Bird", "icon": "pet_bird" },
+        { "id": "a4", "name": "Fish", "icon": "pet_fish" }
+      ]
+    },
+    "hobby": {
+      "name": "Hobby",
+      "items": [
+        { "id": "h1", "name": "Gardening", "icon": "hobby_garden" },
+        { "id": "h2", "name": "Reading", "icon": "hobby_read" },
+        { "id": "h3", "name": "Cooking", "icon": "hobby_cook" },
+        { "id": "h4", "name": "Walking", "icon": "hobby_walk" }
+      ]
+    }
+  },
+  "clueTemplates": {
+    "isSame": [
+      "{item1} loves {item2}.",
+      "The person who likes {item2} is {item1}.",
+      "{item1} is the owner of the {item2}."
+    ],
+    "nextTo": [
+      "{item1} lives next to the {item2}.",
+      "{item1} is adjacent to {item2}."
+    ],
+    "leftOf": [
+      "{item1} is somewhere to the left of {item2}.",
+      "{item1} lives to the west of {item2}."
+    ],
+    "atPosition": [
+      "{item1} lives in the {pos} house.",
+      "The {pos} house belongs to {item1}."
+    ]
+  }
+}

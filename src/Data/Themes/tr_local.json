@@ -1,0 +1,63 @@
+{
+  "id": "tr_local",
+  "languageCode": "tr-TR",
+  "title": "Anadolu Lezzetleri",
+  "description": "Anadolu'nun farklı şehirlerinden gelen lezzetler ve karakterler.",
+  "categoryData": {
+    "person": {
+      "name": "Kişi",
+      "items": [
+        { "id": "p1", "name": "Ahmet", "icon": "person_ahmet" },
+        { "id": "p2", "name": "Ayşe", "icon": "person_ayse" },
+        { "id": "p3", "name": "Fatma", "icon": "person_fatma" },
+        { "id": "p4", "name": "Mehmet", "icon": "person_mehmet" }
+      ]
+    },
+    "drink": {
+      "name": "İçecek",
+      "items": [
+        { "id": "d1", "name": "Çay", "icon": "drink_cay" },
+        { "id": "d2", "name": "Ayran", "icon": "drink_ayran" },
+        { "id": "d3", "name": "Şalgam", "icon": "drink_salgam" },
+        { "id": "d4", "name": "Boza", "icon": "drink_boza" }
+      ]
+    },
+    "food": {
+      "name": "Yiyecek",
+      "items": [
+        { "id": "f1", "name": "Kebap", "icon": "food_kebap" },
+        { "id": "f2", "name": "Mantı", "icon": "food_manti" },
+        { "id": "f3", "name": "Lahmacun", "icon": "food_lahmacun" },
+        { "id": "f4", "name": "Pide", "icon": "food_pide" }
+      ]
+    },
+    "city": {
+      "name": "Şehir",
+      "items": [
+        { "id": "c1", "name": "Adana", "icon": "city_adana" },
+        { "id": "c2", "name": "Kayseri", "icon": "city_kayseri" },
+        { "id": "c3", "name": "Gaziantep", "icon": "city_antep" },
+        { "id": "c4", "name": "Konya", "icon": "city_konya" }
+      ]
+    }
+  },
+  "clueTemplates": {
+    "isSame": [
+      "{item1} {item2} sever.",
+      "{item1} {item2} sipariş etti.",
+      "{item2} tercih eden kişi {item1}."
+    ],
+    "nextTo": [
+      "{item1}, {item2} olanın hemen yanındadır.",
+      "{item1} ile {item2} yan yana oturuyor."
+    ],
+    "leftOf": [
+      "{item1}, {item2} olanın solundaki bir masadadır.",
+      "{item1}, {item2} olandan daha soldadır."
+    ],
+    "atPosition": [
+      "{item1} {pos}. sırada oturuyor.",
+      "{pos}. masadaki kişi {item1}."
+    ]
+  }
+}
