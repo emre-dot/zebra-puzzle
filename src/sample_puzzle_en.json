@@ -50,7 +50,7 @@
     }
   ],
   "clues": [
-    { "id": "c1", "text": "John is right next to the person from the Mission." },
+    { "id": "c1", "text": "John is right next to the person from the Marina." },
     { "id": "c2", "text": "The person eating a Bagel is drinking a Latte." },
     { "id": "c3", "text": "The person from the Marina is directly across from the person eating a Croissant." },
     { "id": "c4", "text": "Mike loves drinking Espresso." },

@@ -50,7 +50,7 @@
     }
   ],
   "clues": [
-    { "id": "c1", "text": "Ahmet, İzmir'den gelen kişinin hemen yanındadır." },
+    { "id": "c1", "text": "Ahmet, Ankara'dan gelen kişinin hemen yanındadır." },
     { "id": "c2", "text": "Simit yiyen kişi, Çay içmektedir." },
     { "id": "c3", "text": "Ankaralı kişi, Boyoz yiyen kişinin tam karşısındadır." },
     { "id": "c4", "text": "Mehmet Türk Kahvesi içmeyi sever." },

@@ -23,7 +23,14 @@ class LocalizationManager: ObservableObject {
         // 3. Merge them to produce the final ZebraPuzzle struct
 
         // This is a simplified mock implementation
-        let language = currentLanguageCode.starts(with: "tr") ? "tr" : "en"
+        let languagePrefix = String(currentLanguageCode.prefix(2))
+        let language: String
+        switch languagePrefix {
+        case "tr": language = "tr"
+        case "ja": language = "ja"
+        default: language = "en"
+        }
+
         let filename = "sample_puzzle_\(language)"
 
         guard let url = Bundle.main.url(forResource: filename, withExtension: "json"),
