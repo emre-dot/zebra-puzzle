@@ -1,0 +1,63 @@
+{
+  "id": "ja_anime",
+  "languageCode": "ja-JP",
+  "title": "Anime Heroes",
+  "description": "A battle of wits between heroes and villains.",
+  "categoryData": {
+    "hero": {
+      "name": "Hero",
+      "items": [
+        { "id": "h1", "name": "Ninja", "icon": "hero_ninja" },
+        { "id": "h2", "name": "Samurai", "icon": "hero_samurai" },
+        { "id": "h3", "name": "Esper", "icon": "hero_esper" },
+        { "id": "h4", "name": "Mecha Pilot", "icon": "hero_pilot" }
+      ]
+    },
+    "power": {
+      "name": "Power",
+      "items": [
+        { "id": "p1", "name": "Fire", "icon": "power_fire" },
+        { "id": "p2", "name": "Ice", "icon": "power_ice" },
+        { "id": "p3", "name": "Lightning", "icon": "power_bolt" },
+        { "id": "p4", "name": "Shadow", "icon": "power_shadow" }
+      ]
+    },
+    "weapon": {
+      "name": "Weapon",
+      "items": [
+        { "id": "w1", "name": "Katana", "icon": "weapon_katana" },
+        { "id": "w2", "name": "Shuriken", "icon": "weapon_star" },
+        { "id": "w3", "name": "Staff", "icon": "weapon_staff" },
+        { "id": "w4", "name": "Robot", "icon": "weapon_robot" }
+      ]
+    },
+    "location": {
+      "name": "Location",
+      "items": [
+        { "id": "l1", "name": "Tokyo", "icon": "loc_tokyo" },
+        { "id": "l2", "name": "Osaka", "icon": "loc_osaka" },
+        { "id": "l3", "name": "Kyoto", "icon": "loc_kyoto" },
+        { "id": "l4", "name": "Akihabara", "icon": "loc_akiba" }
+      ]
+    }
+  },
+  "clueTemplates": {
+    "isSame": [
+      "The {item1} uses the {item2}.",
+      "{item1} is mastered by the {item2}.",
+      "The user of {item2} is the {item1}."
+    ],
+    "nextTo": [
+      "The {item1} is fighting next to the {item2}.",
+      "{item1} stands beside the {item2}."
+    ],
+    "leftOf": [
+      "The {item1} is faster than the {item2} (left).",
+      "{item1} arrives before the {item2}."
+    ],
+    "atPosition": [
+      "The {item1} is ranked #{pos}.",
+      "Rank #{pos} is held by the {item1}."
+    ]
+  }
+}

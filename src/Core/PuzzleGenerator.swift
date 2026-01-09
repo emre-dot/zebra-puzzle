@@ -5,15 +5,21 @@ public class PuzzleGenerator {
 
     public init() {}
 
-    public func generatePuzzle(difficulty: Difficulty, theme: ThemeDefinition) -> ZebraPuzzle {
-        // 1. Determine Grid Size based on Difficulty (Mock)
-        // Easy: 3 Categories, 3 Items
-        // Medium: 4 Categories, 4 Items (Standard)
-        // Hard: 5 Categories, 5 Items
+    /// Generates a puzzle. If `seed` is provided, the result is deterministic.
+    public func generatePuzzle(difficulty: Difficulty, theme: ThemeDefinition, seed: Int? = nil) -> ZebraPuzzle {
+        // Initialize RNG
+        var rng: AnyRandomNumberGenerator
+        if let s = seed {
+            rng = AnyRandomNumberGenerator(LinearCongruentialGenerator(seed: UInt64(s)))
+        } else {
+            rng = AnyRandomNumberGenerator(SystemRandomNumberGenerator())
+        }
+
+        // 1. Determine Grid Size based on Difficulty
         let (numCats, numItems) = getDimensions(for: difficulty)
 
         // 2. Select Categories from Theme
-        let selectedCategoryKeys = Array(theme.categoryData.keys.prefix(numCats))
+        let selectedCategoryKeys = Array(theme.categoryData.keys.sorted().prefix(numCats)) // Sorted for determinism
         var categories: [PuzzleCategory] = []
         var categoryIds: [CategoryID] = []
 
@@ -32,17 +38,15 @@ public class PuzzleGenerator {
         // Map: CategoryID -> [ItemID] (ordered by house 0..N)
         var solution: [CategoryID: [ItemID]] = [:]
 
-        // First category is "Anchor" (e.g. Houses 1,2,3,4) - usually implies position.
-        // For standard Zebra, all categories are permuted relative to positions.
-        // Let's just shuffle items for each category.
         for cat in categories {
             var items = cat.items.map { $0.id }
-            items.shuffle()
+            // Shuffle deterministically
+            items.shuffle(using: &rng)
             solution[cat.id] = items
         }
 
         // 4. Generate Rules (Logic) derived from Solution
-        let rules = generateRules(solution: solution, categories: categories, difficulty: difficulty)
+        let rules = generateRules(solution: solution, categories: categories, difficulty: difficulty, rng: &rng)
 
         // 5. Convert Rules to Text Clues
         let categoryMap = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0) })
@@ -74,30 +78,22 @@ public class PuzzleGenerator {
         }
     }
 
-    private func generateRules(solution: [CategoryID: [ItemID]], categories: [PuzzleCategory], difficulty: Difficulty) -> [PuzzleRule] {
+    private func generateRules(solution: [CategoryID: [ItemID]], categories: [PuzzleCategory], difficulty: Difficulty, rng: inout AnyRandomNumberGenerator) -> [PuzzleRule] {
         var rules: [PuzzleRule] = []
         let numItems = solution.values.first?.count ?? 0
         let catIds = categories.map { $0.id }
 
-        // A simple generator strategy:
-        // Iterate through columns (houses) and generate "IsSame" facts.
-        // Iterate through adjacencies and generate "NextTo" facts.
-
         // 1. Position Clue (Anchor)
-        // e.g. "Item A is in the first house"
         if let firstCat = catIds.first, let items = solution[firstCat] {
             let item = items[0]
             rules.append(.atPosition(firstCat, item, 0))
         }
 
         // 2. Direct Links (Vertical)
-        // "The Brit eats Bagels"
-        // Randomly pick pairs from same column
         for i in 0..<numItems {
-            // Pick two random categories
-            let c1 = catIds.randomElement()!
-            var c2 = catIds.randomElement()!
-            while c1 == c2 { c2 = catIds.randomElement()! }
+            let c1 = catIds.randomElement(using: &rng)!
+            var c2 = catIds.randomElement(using: &rng)!
+            while c1 == c2 { c2 = catIds.randomElement(using: &rng)! }
 
             let item1 = solution[c1]![i]
             let item2 = solution[c2]![i]
@@ -106,11 +102,9 @@ public class PuzzleGenerator {
         }
 
         // 3. Adjacency (Horizontal)
-        // "The Green house is next to the White house"
         for i in 0..<(numItems - 1) {
-            let c1 = catIds.randomElement()!
-            let c2 = catIds.randomElement()!
-            // Can be same category for next to (Green next to White) or diff (Brit next to Dog)
+            let c1 = catIds.randomElement(using: &rng)!
+            let c2 = catIds.randomElement(using: &rng)!
 
             let item1 = solution[c1]![i]
             let item2 = solution[c2]![i+1]
@@ -118,9 +112,38 @@ public class PuzzleGenerator {
             rules.append(.nextTo(c1, item1, c2, item2))
         }
 
-        // Shuffle rules
-        rules.shuffle()
+        rules.shuffle(using: &rng)
 
         return rules
+    }
+}
+
+// MARK: - RNG Helpers
+
+// Simple LCG for deterministic seed support
+struct LinearCongruentialGenerator: RandomNumberGenerator {
+    var state: UInt64
+
+    init(seed: UInt64) {
+        self.state = seed
+    }
+
+    mutating func next() -> UInt64 {
+        state = 6364136223846793005 &* state &+ 1442695040888963407
+        return state
+    }
+}
+
+// Type eraser for RNG
+struct AnyRandomNumberGenerator: RandomNumberGenerator {
+    var _next: () -> UInt64
+
+    init<G: RandomNumberGenerator>(_ rng: G) {
+        var rng = rng
+        self._next = { rng.next() }
+    }
+
+    mutating func next() -> UInt64 {
+        return _next()
     }
 }

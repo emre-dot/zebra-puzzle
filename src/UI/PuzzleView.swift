@@ -6,17 +6,49 @@ struct PuzzleView: View {
     @State private var userState: [String: Bool] = [:] // Key: "id1_id2", Value: isMatched
     @State private var hintText: String = ""
     @State private var showHint: Bool = false
+    @State private var showShop: Bool = false
+    @State private var isDailyChallenge: Bool = false
 
     var body: some View {
         NavigationView {
             VStack {
+                // Daily Challenge Banner
+                if !DailyChallengeManager.shared.isDailyChallengeCompleted() {
+                    Button(action: {
+                        startDailyChallenge()
+                    }) {
+                        HStack {
+                            Image(systemName: "flame.fill").foregroundColor(.orange)
+                            Text("Daily Challenge Available!")
+                                .fontWeight(.bold)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                        }
+                        .padding()
+                        .background(Color.orange.opacity(0.1))
+                        .cornerRadius(10)
+                        .padding(.horizontal)
+                    }
+                }
+
                 if let puzzle = puzzle {
                     // Game Board
                     ScrollView {
                         VStack(alignment: .leading) {
-                            Text(puzzle.themeTitle)
-                                .font(.largeTitle)
-                                .bold()
+                            HStack {
+                                Text(puzzle.themeTitle)
+                                    .font(.largeTitle)
+                                    .bold()
+                                Spacer()
+                                if isDailyChallenge {
+                                    Text("DAILY")
+                                        .font(.caption)
+                                        .padding(4)
+                                        .background(Color.orange)
+                                        .foregroundColor(.white)
+                                        .cornerRadius(4)
+                                }
+                            }
 
                             Text(puzzle.description)
                                 .font(.subheadline)
@@ -50,22 +82,31 @@ struct PuzzleView: View {
                     HStack {
                         Button(action: {
                             generatePuzzle()
+                            isDailyChallenge = false
                         }) {
-                            Label("New Puzzle", systemImage: "arrow.clockwise")
+                            Label("New", systemImage: "arrow.clockwise")
                         }
 
                         Spacer()
 
                         Button(action: {
-                            if let p = self.puzzle {
-                                hintText = HintSystem.shared.getHint(puzzle: p, userState: userState)
-                                showHint = true
-                            }
+                            showShop = true
+                        }) {
+                            Label("Shop", systemImage: "cart")
+                        }
+
+                        Spacer()
+
+                        Button(action: {
+                            requestHint()
                         }) {
                             Label("Hint", systemImage: "lightbulb")
                         }
                     }
                     .padding()
+                    .sheet(isPresented: $showShop) {
+                        ShopView()
+                    }
                     .alert(isPresented: $showHint) {
                         Alert(title: Text("Hint"), message: Text(hintText), dismissButton: .default(Text("OK")))
                     }
@@ -83,18 +124,27 @@ struct PuzzleView: View {
     }
 
     func loadAndGenerate() {
-        // 1. Load Theme (Mock: Load local file)
-        // In real app, this comes from bundle
-        // We simulate loading the English Classic theme
+        // 1. Load Theme
+        // Production: Load from Bundle.main
+        // Development: Load from local file path
 
-        // We will create a mock ThemeDefinition manually here or try to load file if environment allowed.
-        // Since we are in sandbox, let's use the file we wrote to src/Data/Themes/en_classic.json
+        var url: URL?
 
-        let path = "src/Data/Themes/en_classic.json" // Relative path
-        let url = URL(fileURLWithPath: path)
+        if let bundleUrl = Bundle.main.url(forResource: "en_classic", withExtension: "json") {
+            url = bundleUrl
+        } else {
+            // Fallback for Sandbox/CLI environment
+            let path = "src/Data/Themes/en_classic.json"
+            url = URL(fileURLWithPath: path)
+        }
+
+        guard let themeUrl = url else {
+            print("Theme file not found")
+            return
+        }
 
         do {
-            try ThemeEngine.shared.loadTheme(from: url)
+            try ThemeEngine.shared.loadTheme(from: themeUrl)
             if let loadedTheme = ThemeEngine.shared.getTheme(id: "en_classic") {
                 self.theme = loadedTheme
                 generatePuzzle()
@@ -108,6 +158,40 @@ struct PuzzleView: View {
         guard let t = theme else { return }
         self.puzzle = PuzzleGenerator.shared.generatePuzzle(difficulty: .medium, theme: t)
         self.userState = [:] // Reset state
+
+        AnalyticsManager.shared.trackEvent(name: "puzzle_start", params: ["theme": t.id])
+    }
+
+    func startDailyChallenge() {
+        guard let t = theme else { return }
+        let seed = DailyChallengeManager.shared.getDailySeed()
+        self.puzzle = PuzzleGenerator.shared.generatePuzzle(difficulty: .hard, theme: t, seed: seed)
+        self.userState = [:]
+        self.isDailyChallenge = true
+
+        AnalyticsManager.shared.trackEvent(name: "daily_challenge_start", params: ["seed": seed])
+    }
+
+    func requestHint() {
+        guard let p = self.puzzle else { return }
+
+        if StoreManager.shared.isProMember {
+            // Free hints for Pro
+            showHint(for: p)
+        } else {
+            // Show Ad
+            AdManager.shared.showRewardedAd { success in
+                if success {
+                    showHint(for: p)
+                }
+            }
+        }
+    }
+
+    func showHint(for p: ZebraPuzzle) {
+        hintText = HintSystem.shared.getHint(puzzle: p, userState: userState)
+        showHint = true
+        AnalyticsManager.shared.trackEvent(name: "hint_used", params: ["is_daily": isDailyChallenge])
     }
 }
 
