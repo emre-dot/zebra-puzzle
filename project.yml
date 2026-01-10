@@ -1,0 +1,18 @@
+name: ZebraPuzzlePro
+options:
+  bundleIdPrefix: com.zebrapuzzlepro
+  deploymentTarget:
+    iOS: 15.0
+targets:
+  ZebraPuzzlePro:
+    type: application
+    platform: iOS
+    sources: [src]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.zebrapuzzlepro.app
+        INFOPLIST_KEY_CFBundleDisplayName: "Zebra Puzzle"
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+    dependencies: []
+    scheme:
+      testTargets: []

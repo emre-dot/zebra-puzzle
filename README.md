@@ -45,12 +45,19 @@ src/
     cd zebra-puzzle-pro
     ```
 
-2.  **Open in Xcode**
-    - Drag the `src` folder into your Xcode project.
-    - Ensure `Models.swift` and other Core files are added to your target.
+2.  **Open in Xcode (Recommended)**
+    - Double-click `Package.swift` in the root directory.
+    - Xcode will open the project as a Swift Package.
+    - Select the `ZebraPuzzlePro` scheme and run it on a Simulator.
 
-3.  **Run the App**
-    - Select the `PuzzleView` as your root view in `ContentView.swift`.
+3.  **Generate .xcodeproj (Optional)**
+    - If you strictly require a `.xcodeproj` file (e.g., for specific build settings or legacy tools), you can generate one using **XcodeGen**:
+        ```bash
+        brew install xcodegen
+        xcodegen
+        open ZebraPuzzlePro.xcodeproj
+        ```
+    - A `project.yml` configuration file is included in the root for this purpose.
 
 ## 🎨 Adding New Themes
 
