@@ -4,11 +4,27 @@ struct LandingView: View {
     @State private var showPuzzle = false
     @State private var selectedDifficulty: Difficulty = .medium
     @State private var showShop = false
+    @State private var showSettings = false
     @State private var isDaily = false
+
+    @ObservedObject var themeManager = AppThemeManager.shared
 
     var body: some View {
         NavigationView {
             VStack(spacing: 30) {
+                // Settings Button (Top Right)
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        showSettings = true
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title2)
+                            .foregroundColor(.gray)
+                    }
+                    .padding()
+                }
+
                 // Title
                 VStack(spacing: 10) {
                     Image(systemName: "checkerboard.rectangle")
@@ -82,7 +98,11 @@ struct LandingView: View {
             .sheet(isPresented: $showShop) {
                 ShopView()
             }
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
+            }
         }
+        .preferredColorScheme(themeManager.isDarkMode ? .dark : .light)
     }
 
     private func startGame(difficulty: Difficulty) {

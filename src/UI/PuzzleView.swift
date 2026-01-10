@@ -11,6 +11,8 @@ struct PuzzleView: View {
     @State private var showHint: Bool = false
     @State private var showShop: Bool = false
     @State private var isDailyChallenge: Bool = false
+    @State private var isGameComplete: Bool = false
+    @State private var completionMessage: String = ""
 
     init(difficulty: Difficulty, isDaily: Bool = false) {
         self.difficulty = difficulty
@@ -46,12 +48,29 @@ struct PuzzleView: View {
 
                         Divider()
 
-                        // Logic Grid Renderer
-                        if puzzle.categories.count >= 2 {
-                            let c1 = puzzle.categories[0]
-                            let c2 = puzzle.categories[1]
-                            LogicGrid(rowItems: c2.items, colItems: c1.items, userState: $userState)
-                                .padding(.vertical)
+                        // Logic Grid Renderer (Staircase Layout)
+                        // We render a triangular grid structure to allow cross-referencing all categories.
+                        // Outer Loop (Rows): Categories starting from index 1
+                        ForEach(1..<puzzle.categories.count, id: \.self) { rowIdx in
+                            HStack(alignment: .top, spacing: 10) {
+                                // Inner Loop (Cols): Categories up to rowIdx
+                                ForEach(0..<rowIdx, id: \.self) { colIdx in
+                                    let rowCat = puzzle.categories[rowIdx]
+                                    let colCat = puzzle.categories[colIdx]
+
+                                    VStack(spacing: 0) {
+                                        // Only show headers for the TOP grid of each vertical stack.
+                                        // Vertical stacks are formed by the colIdx.
+                                        // Stack 0 starts at rowIdx 1. Stack 1 starts at rowIdx 2.
+                                        // Condition: rowIdx == colIdx + 1
+                                        LogicGrid(rowItems: rowCat.items, colItems: colCat.items, userState: $userState, showColHeaders: rowIdx == colIdx + 1, showRowHeaders: colIdx == 0)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.vertical)
+                        .onChange(of: userState) { _ in
+                            checkCompletion()
                         }
 
                         Divider()
@@ -119,6 +138,11 @@ struct PuzzleView: View {
                 .alert(isPresented: $showHint) {
                     Alert(title: Text("Hint"), message: Text(hintText), dismissButton: .default(Text("OK")))
                 }
+                .alert(isPresented: $isGameComplete) {
+                    Alert(title: Text("Puzzle Complete"), message: Text(completionMessage), dismissButton: .default(Text("OK"), action: {
+                        // Optional: Navigate back or reset
+                    }))
+                }
 
             } else {
                 // Loading / Init State
@@ -133,21 +157,26 @@ struct PuzzleView: View {
     }
 
     func loadAndGenerate() {
-        // Load default theme (Classic)
+        // Load Selected Theme from Settings
+        let themeId = AppThemeManager.shared.selectedThemeId
         var url: URL?
 
-        if let bundleUrl = Bundle.main.url(forResource: "en_classic", withExtension: "json") {
+        if let bundleUrl = Bundle.main.url(forResource: themeId, withExtension: "json") {
             url = bundleUrl
         } else {
-            let path = "src/Data/Themes/en_classic.json"
+            // Fallback path
+            let path = "src/Data/Themes/\(themeId).json"
             url = URL(fileURLWithPath: path)
         }
 
-        guard let themeUrl = url else { return }
+        guard let themeUrl = url else {
+            print("Theme file not found: \(themeId)")
+            return
+        }
 
         do {
             try ThemeEngine.shared.loadTheme(from: themeUrl)
-            if let loadedTheme = ThemeEngine.shared.getTheme(id: "en_classic") {
+            if let loadedTheme = ThemeEngine.shared.getTheme(id: themeId) {
                 self.theme = loadedTheme
                 if isDailyChallenge {
                     startDailyChallenge(theme: loadedTheme)
@@ -193,9 +222,92 @@ struct PuzzleView: View {
     }
 
     func showHint(for p: ZebraPuzzle) {
-        hintText = HintSystem.shared.getHint(puzzle: p, userState: userState)
+        let hintAction = HintSystem.shared.getHint(puzzle: p, userState: userState)
+        hintText = hintAction.text
+
+        if let cell = hintAction.cellToFill {
+            // Apply the hint directly
+            userState[cell.key] = cell.value
+        }
+
         showHint = true
         AnalyticsManager.shared.trackEvent(name: "hint_used", params: ["is_daily": isDailyChallenge])
+    }
+
+    func checkCompletion() {
+        guard let p = puzzle else { return }
+
+        // 1. Check if all cells are filled (either True or False)
+        // Simplification: Check if we have enough "True" values.
+        // For a grid of N categories with M items, there are N*(N-1)/2 grids.
+        // Each subgrid (MxM) should have M 'True' values.
+        // Total 'True' values = (N*(N-1)/2) * M
+
+        // This is a naive check. A better check is to verify against solution.
+
+        let categories = p.categories
+        var isCorrect = true
+        var filledCount = 0
+
+        // Iterate all possible pairings in the solution
+        for cat1 in categories {
+            for cat2 in categories {
+                if cat1.id == cat2.id { continue }
+                if cat1.id > cat2.id { continue } // Check pairs once
+
+                guard let sol1 = p.solution[cat1.id],
+                      let sol2 = p.solution[cat2.id] else { continue }
+
+                for i in 0..<sol1.count {
+                    let item1 = sol1[i]
+                    let item2 = sol2[i]
+                    let trueKey = item1 < item2 ? "\(item1)_\(item2)" : "\(item2)_\(item1)"
+
+                    // 1. Check if the correct pair is marked TRUE
+                    if userState[trueKey] != true {
+                        isCorrect = false
+                    } else {
+                        filledCount += 1
+                    }
+                }
+
+                // 2. Extra check: Ensure no INCORRECT pairs are marked TRUE
+                // For every item in cat1, check every item in cat2.
+                // If marked True but not in solution, fail.
+                for item1 in cat1.items.map({$0.id}) {
+                    for item2 in cat2.items.map({$0.id}) {
+                        let key = item1 < item2 ? "\(item1)_\(item2)" : "\(item2)_\(item1)"
+
+                        // Determine if this pairing is actually correct in solution
+                        // Find index of item1 in sol1
+                        if let idx1 = sol1.firstIndex(of: item1),
+                           let idx2 = sol2.firstIndex(of: item2) {
+                            let shouldBeTrue = (idx1 == idx2)
+
+                            if userState[key] == true && !shouldBeTrue {
+                                isCorrect = false // User marked a wrong pair as True
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Total expected true values
+        let numCats = categories.count
+        let numItems = categories.first?.items.count ?? 0
+        let totalPairs = (numCats * (numCats - 1)) / 2
+        let expectedTrue = totalPairs * numItems
+
+        if filledCount == expectedTrue && isCorrect {
+            completionMessage = "Congratulations! You solved the puzzle correctly."
+            isGameComplete = true
+
+            if isDailyChallenge {
+                DailyChallengeManager.shared.markDailyChallengeCompleted()
+                AnalyticsManager.shared.trackEvent(name: "daily_challenge_completed", params: [:])
+            }
+        }
     }
 }
 
@@ -203,34 +315,42 @@ struct LogicGrid: View {
     let rowItems: [PuzzleItem]
     let colItems: [PuzzleItem]
     @Binding var userState: [String: Bool]
+    var showColHeaders: Bool = true
+    var showRowHeaders: Bool = true
 
     var body: some View {
         VStack(spacing: 0) {
             // Header Row
-            HStack(spacing: 0) {
-                Color.clear.frame(width: 80, height: 80) // Increased height for vertical text
-                ForEach(colItems) { item in
-                    VStack {
-                        Spacer()
-                        Text(item.displayValue)
-                            .font(.caption)
-                            .lineLimit(1)
-                            .fixedSize()
-                            .rotationEffect(.degrees(-90))
-                            .frame(width: 40)
+            if showColHeaders {
+                HStack(spacing: 0) {
+                    if showRowHeaders {
+                        Color.clear.frame(width: 80, height: 80)
                     }
-                    .frame(width: 40, height: 80)
-                    .border(Color.gray.opacity(0.2))
+                    ForEach(colItems) { item in
+                        VStack {
+                            Spacer()
+                            Text(item.displayValue)
+                                .font(.caption)
+                                .lineLimit(1)
+                                .fixedSize()
+                                .rotationEffect(.degrees(-90))
+                                .frame(width: 40)
+                        }
+                        .frame(width: 40, height: 80)
+                        .border(Color.gray.opacity(0.2))
+                    }
                 }
             }
 
             // Rows
             ForEach(rowItems) { rItem in
                 HStack(spacing: 0) {
-                    Text(rItem.displayValue)
-                        .font(.caption)
-                        .frame(width: 80, height: 40, alignment: .trailing)
-                        .padding(.trailing, 5)
+                    if showRowHeaders {
+                        Text(rItem.displayValue)
+                            .font(.caption)
+                            .frame(width: 80, height: 40, alignment: .trailing)
+                            .padding(.trailing, 5)
+                    }
 
                     ForEach(colItems) { cItem in
                         GridCell(rId: rItem.id, cId: cItem.id, userState: $userState)
