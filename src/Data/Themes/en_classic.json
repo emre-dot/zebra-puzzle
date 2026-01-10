@@ -10,7 +10,9 @@
         { "id": "p1", "name": "Mr. Smith", "icon": "person_smith" },
         { "id": "p2", "name": "Mrs. Jones", "icon": "person_jones" },
         { "id": "p3", "name": "Mr. Brown", "icon": "person_brown" },
-        { "id": "p4", "name": "Ms. White", "icon": "person_white" }
+        { "id": "p4", "name": "Ms. White", "icon": "person_white" },
+        { "id": "p5", "name": "Dr. Green", "icon": "person_green" },
+        { "id": "p6", "name": "Prof. Plum", "icon": "person_plum" }
       ]
     },
     "drink": {
@@ -19,7 +21,9 @@
         { "id": "d1", "name": "Earl Grey", "icon": "drink_earl" },
         { "id": "d2", "name": "Coffee", "icon": "drink_coffee" },
         { "id": "d3", "name": "Milk", "icon": "drink_milk" },
-        { "id": "d4", "name": "Orange Juice", "icon": "drink_oj" }
+        { "id": "d4", "name": "Orange Juice", "icon": "drink_oj" },
+        { "id": "d5", "name": "Water", "icon": "drink_water" },
+        { "id": "d6", "name": "Lemonade", "icon": "drink_lemonade" }
       ]
     },
     "pet": {
@@ -28,7 +32,9 @@
         { "id": "a1", "name": "Dog", "icon": "pet_dog" },
         { "id": "a2", "name": "Cat", "icon": "pet_cat" },
         { "id": "a3", "name": "Bird", "icon": "pet_bird" },
-        { "id": "a4", "name": "Fish", "icon": "pet_fish" }
+        { "id": "a4", "name": "Fish", "icon": "pet_fish" },
+        { "id": "a5", "name": "Hamster", "icon": "pet_hamster" },
+        { "id": "a6", "name": "Rabbit", "icon": "pet_rabbit" }
       ]
     },
     "hobby": {
@@ -37,7 +43,31 @@
         { "id": "h1", "name": "Gardening", "icon": "hobby_garden" },
         { "id": "h2", "name": "Reading", "icon": "hobby_read" },
         { "id": "h3", "name": "Cooking", "icon": "hobby_cook" },
-        { "id": "h4", "name": "Walking", "icon": "hobby_walk" }
+        { "id": "h4", "name": "Walking", "icon": "hobby_walk" },
+        { "id": "h5", "name": "Painting", "icon": "hobby_paint" },
+        { "id": "h6", "name": "Fishing", "icon": "hobby_fish" }
+      ]
+    },
+    "color": {
+      "name": "Color",
+      "items": [
+        { "id": "c1", "name": "Red", "icon": "color_red" },
+        { "id": "c2", "name": "Blue", "icon": "color_blue" },
+        { "id": "c3", "name": "Green", "icon": "color_green" },
+        { "id": "c4", "name": "Yellow", "icon": "color_yellow" },
+        { "id": "c5", "name": "White", "icon": "color_white" },
+        { "id": "c6", "name": "Black", "icon": "color_black" }
+      ]
+    },
+    "flower": {
+      "name": "Flower",
+      "items": [
+        { "id": "f1", "name": "Rose", "icon": "flower_rose" },
+        { "id": "f2", "name": "Tulip", "icon": "flower_tulip" },
+        { "id": "f3", "name": "Daisy", "icon": "flower_daisy" },
+        { "id": "f4", "name": "Lily", "icon": "flower_lily" },
+        { "id": "f5", "name": "Orchid", "icon": "flower_orchid" },
+        { "id": "f6", "name": "Poppy", "icon": "flower_poppy" }
       ]
     }
   },
