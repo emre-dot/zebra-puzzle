@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct PuzzleView: View {
+    let difficulty: Difficulty
+    var isDaily: Bool = false
+
     @State private var puzzle: ZebraPuzzle?
     @State private var theme: ThemeDefinition?
     @State private var userState: [String: Bool] = [:] // Key: "id1_id2", Value: isMatched
@@ -9,165 +12,166 @@ struct PuzzleView: View {
     @State private var showShop: Bool = false
     @State private var isDailyChallenge: Bool = false
 
-    var body: some View {
-        NavigationView {
-            VStack {
-                // Daily Challenge Banner
-                if !DailyChallengeManager.shared.isDailyChallengeCompleted() {
-                    Button(action: {
-                        startDailyChallenge()
-                    }) {
-                        HStack {
-                            Image(systemName: "flame.fill").foregroundColor(.orange)
-                            Text("Daily Challenge Available!")
-                                .fontWeight(.bold)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                        }
-                        .padding()
-                        .background(Color.orange.opacity(0.1))
-                        .cornerRadius(10)
-                        .padding(.horizontal)
-                    }
-                }
+    init(difficulty: Difficulty, isDaily: Bool = false) {
+        self.difficulty = difficulty
+        self.isDaily = isDaily
+        _isDailyChallenge = State(initialValue: isDaily)
+    }
 
-                if let puzzle = puzzle {
-                    // Game Board
-                    ScrollView {
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text(puzzle.themeTitle)
-                                    .font(.largeTitle)
-                                    .bold()
-                                Spacer()
-                                if isDailyChallenge {
-                                    Text("DAILY")
-                                        .font(.caption)
-                                        .padding(4)
-                                        .background(Color.orange)
-                                        .foregroundColor(.white)
-                                        .cornerRadius(4)
+    var body: some View {
+        VStack {
+            if let puzzle = puzzle {
+                // Game Board
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        HStack {
+                            Text(puzzle.themeTitle)
+                                .font(.title)
+                                .bold()
+                            Spacer()
+                            if isDailyChallenge {
+                                Text("DAILY")
+                                    .font(.caption)
+                                    .padding(4)
+                                    .background(Color.orange)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(4)
+                            }
+                        }
+                        .padding(.top)
+
+                        Text(puzzle.description)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
+                        Divider()
+
+                        // Logic Grid Renderer
+                        if puzzle.categories.count >= 2 {
+                            let c1 = puzzle.categories[0]
+                            let c2 = puzzle.categories[1]
+                            LogicGrid(rowItems: c2.items, colItems: c1.items, userState: $userState)
+                                .padding(.vertical)
+                        }
+
+                        Divider()
+
+                        Text("Clues")
+                            .font(.headline)
+
+                        // Scrollable Clues Section
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(puzzle.clues) { clue in
+                                    HStack(alignment: .top) {
+                                        Image(systemName: "circle.fill")
+                                            .font(.system(size: 6))
+                                            .padding(.top, 6)
+                                        Text(clue.text)
+                                            .font(.body)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
                                 }
                             }
-
-                            Text(puzzle.description)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-
-                            Divider()
-
-                            // Simple Grid Renderer
-                            // We only show Cat 0 vs Cat 1 for brevity in this UI mock
-                            if puzzle.categories.count >= 2 {
-                                let c1 = puzzle.categories[0]
-                                let c2 = puzzle.categories[1]
-                                LogicGrid(rowItems: c2.items, colItems: c1.items, userState: $userState)
-                            }
-
-                            Divider()
-
-                            Text("Clues")
-                                .font(.headline)
-                                .padding(.top)
-
-                            ForEach(puzzle.clues) { clue in
-                                Text("• " + clue.text)
-                                    .padding(.vertical, 2)
-                            }
                         }
-                        .padding()
+                        .frame(maxHeight: 200) // Constrain height to make it scrollable independently if needed, or let parent scroll handle it.
+                        // Since parent is ScrollView, nested ScrollView might be tricky.
+                        // The user said "ipuçları bölümünde scrollable olsun".
+                        // If the grid is large, the clues are pushed down.
+                        // Let's remove the nested ScrollView and rely on the main one,
+                        // BUT formatting implies they might want a fixed area.
+                        // I will keep main scroll for now as it's safer for varying content sizes.
+                        // The explicit requirement usually implies "make sure I can see them all".
                     }
+                    .padding()
+                }
 
-                    // Bottom Bar
-                    HStack {
+                // Bottom Bar
+                HStack {
+                    if !isDailyChallenge {
                         Button(action: {
                             generatePuzzle()
-                            isDailyChallenge = false
                         }) {
                             Label("New", systemImage: "arrow.clockwise")
                         }
-
-                        Spacer()
-
-                        Button(action: {
-                            showShop = true
-                        }) {
-                            Label("Shop", systemImage: "cart")
-                        }
-
-                        Spacer()
-
-                        Button(action: {
-                            requestHint()
-                        }) {
-                            Label("Hint", systemImage: "lightbulb")
-                        }
-                    }
-                    .padding()
-                    .sheet(isPresented: $showShop) {
-                        ShopView()
-                    }
-                    .alert(isPresented: $showHint) {
-                        Alert(title: Text("Hint"), message: Text(hintText), dismissButton: .default(Text("OK")))
                     }
 
-                } else {
-                    // Loading / Init State
-                    Text("Loading Theme...")
-                        .onAppear {
-                            loadAndGenerate()
-                        }
+                    Spacer()
+
+                    Button(action: {
+                        showShop = true
+                    }) {
+                        Label("Shop", systemImage: "cart")
+                    }
+
+                    Spacer()
+
+                    Button(action: {
+                        requestHint()
+                    }) {
+                        Label("Hint", systemImage: "lightbulb")
+                    }
                 }
+                .padding()
+                .sheet(isPresented: $showShop) {
+                    ShopView()
+                }
+                .alert(isPresented: $showHint) {
+                    Alert(title: Text("Hint"), message: Text(hintText), dismissButton: .default(Text("OK")))
+                }
+
+            } else {
+                // Loading / Init State
+                ProgressView("Generating Puzzle...")
+                    .onAppear {
+                        loadAndGenerate()
+                    }
             }
-            .navigationTitle("Zebra Puzzle Pro")
         }
+        .navigationTitle("Puzzle")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     func loadAndGenerate() {
-        // 1. Load Theme
-        // Production: Load from Bundle.main
-        // Development: Load from local file path
-
+        // Load default theme (Classic)
         var url: URL?
 
         if let bundleUrl = Bundle.main.url(forResource: "en_classic", withExtension: "json") {
             url = bundleUrl
         } else {
-            // Fallback for Sandbox/CLI environment
             let path = "src/Data/Themes/en_classic.json"
             url = URL(fileURLWithPath: path)
         }
 
-        guard let themeUrl = url else {
-            print("Theme file not found")
-            return
-        }
+        guard let themeUrl = url else { return }
 
         do {
             try ThemeEngine.shared.loadTheme(from: themeUrl)
             if let loadedTheme = ThemeEngine.shared.getTheme(id: "en_classic") {
                 self.theme = loadedTheme
-                generatePuzzle()
+                if isDailyChallenge {
+                    startDailyChallenge(theme: loadedTheme)
+                } else {
+                    generatePuzzle(theme: loadedTheme)
+                }
             }
         } catch {
             print("Failed to load theme: \(error)")
         }
     }
 
-    func generatePuzzle() {
-        guard let t = theme else { return }
-        self.puzzle = PuzzleGenerator.shared.generatePuzzle(difficulty: .medium, theme: t)
-        self.userState = [:] // Reset state
+    func generatePuzzle(theme: ThemeDefinition? = nil) {
+        guard let t = theme ?? self.theme else { return }
+        self.puzzle = PuzzleGenerator.shared.generatePuzzle(difficulty: self.difficulty, theme: t)
+        self.userState = [:]
 
-        AnalyticsManager.shared.trackEvent(name: "puzzle_start", params: ["theme": t.id])
+        AnalyticsManager.shared.trackEvent(name: "puzzle_start", params: ["theme": t.id, "difficulty": difficulty.rawValue])
     }
 
-    func startDailyChallenge() {
-        guard let t = theme else { return }
+    func startDailyChallenge(theme: ThemeDefinition) {
         let seed = DailyChallengeManager.shared.getDailySeed()
-        self.puzzle = PuzzleGenerator.shared.generatePuzzle(difficulty: .hard, theme: t, seed: seed)
+        self.puzzle = PuzzleGenerator.shared.generatePuzzle(difficulty: .hard, theme: theme, seed: seed)
         self.userState = [:]
-        self.isDailyChallenge = true
 
         AnalyticsManager.shared.trackEvent(name: "daily_challenge_start", params: ["seed": seed])
     }
@@ -204,11 +208,19 @@ struct LogicGrid: View {
         VStack(spacing: 0) {
             // Header Row
             HStack(spacing: 0) {
-                Color.clear.frame(width: 80, height: 40)
+                Color.clear.frame(width: 80, height: 80) // Increased height for vertical text
                 ForEach(colItems) { item in
-                    Text(item.displayValue.prefix(3))
-                        .frame(width: 40, height: 40)
-                        .border(Color.gray.opacity(0.2))
+                    VStack {
+                        Spacer()
+                        Text(item.displayValue)
+                            .font(.caption)
+                            .lineLimit(1)
+                            .fixedSize()
+                            .rotationEffect(.degrees(-90))
+                            .frame(width: 40)
+                    }
+                    .frame(width: 40, height: 80)
+                    .border(Color.gray.opacity(0.2))
                 }
             }
 
@@ -216,6 +228,7 @@ struct LogicGrid: View {
             ForEach(rowItems) { rItem in
                 HStack(spacing: 0) {
                     Text(rItem.displayValue)
+                        .font(.caption)
                         .frame(width: 80, height: 40, alignment: .trailing)
                         .padding(.trailing, 5)
 
