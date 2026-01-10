@@ -31,6 +31,9 @@ public class PuzzleGenerator {
             guard let data = theme.categoryData[key] else { continue }
             // Take first N items
             let safeNumItems = min(numItems, data.items.count)
+            // Safety check: Avoid crash if safeNumItems is 0 (should not happen with valid themes)
+            if safeNumItems == 0 { continue }
+
             let items = data.items.prefix(safeNumItems).map {
                 PuzzleItem(id: $0.id, displayValue: $0.name, iconName: $0.icon)
             }
@@ -86,6 +89,10 @@ public class PuzzleGenerator {
     private func generateRules(solution: [CategoryID: [ItemID]], categories: [PuzzleCategory], difficulty: Difficulty, rng: inout AnyRandomNumberGenerator) -> [PuzzleRule] {
         var rules: [PuzzleRule] = []
         let numItems = solution.values.first?.count ?? 0
+
+        // Safety check to prevent crashes if solution is empty
+        if numItems < 2 { return [] }
+
         let catIds = categories.map { $0.id }
 
         // Target clue counts
@@ -131,7 +138,10 @@ public class PuzzleGenerator {
         // Fill remaining clues until target is reached
         // We generate valid facts from the solution
         var attempts = 0
-        while rules.count < targetClues && attempts < 1000 {
+        // Use a higher safety limit for 'Hard' puzzles since target is higher and probability of collision increases
+        let maxAttempts = 2000
+
+        while rules.count < targetClues && attempts < maxAttempts {
             attempts += 1
 
             // Pick a rule type based on weights

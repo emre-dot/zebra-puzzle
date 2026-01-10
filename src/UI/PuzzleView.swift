@@ -13,6 +13,7 @@ struct PuzzleView: View {
     @State private var isDailyChallenge: Bool = false
     @State private var isGameComplete: Bool = false
     @State private var completionMessage: String = ""
+    @State private var errorMessage: String? = nil // To show loading errors
 
     init(difficulty: Difficulty, isDaily: Bool = false) {
         self.difficulty = difficulty
@@ -159,11 +160,33 @@ struct PuzzleView: View {
                         }))
                     }
 
+                } else if let errorMessage = errorMessage {
+                    VStack {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.largeTitle)
+                            .foregroundColor(.red)
+                            .padding()
+                        Text("Error Loading Puzzle")
+                            .font(.headline)
+                        Text(errorMessage)
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                        Button("Retry") {
+                            self.errorMessage = nil
+                            loadAndGenerate()
+                        }
+                        .padding()
+                    }
                 } else {
                     // Loading / Init State
                     ProgressView("Generating Puzzle...")
                         .onAppear {
-                            loadAndGenerate()
+                            // Run on background thread to prevent UI blocking
+                            DispatchQueue.global(qos: .userInitiated).async {
+                                loadAndGenerate()
+                            }
                         }
                 }
             }
@@ -186,37 +209,68 @@ struct PuzzleView: View {
         }
 
         guard let themeUrl = url else {
-            print("Theme file not found: \(themeId)")
+            DispatchQueue.main.async {
+                self.errorMessage = "Theme file not found: \(themeId)"
+            }
             return
         }
 
         do {
             try ThemeEngine.shared.loadTheme(from: themeUrl)
             if let loadedTheme = ThemeEngine.shared.getTheme(id: themeId) {
-                self.theme = loadedTheme
-                if isDailyChallenge {
-                    startDailyChallenge(theme: loadedTheme)
-                } else {
-                    generatePuzzle(theme: loadedTheme)
+                // Must update state on Main Actor
+                DispatchQueue.main.async {
+                    self.theme = loadedTheme
+                    if isDailyChallenge {
+                        startDailyChallenge(theme: loadedTheme)
+                    } else {
+                        generatePuzzle(theme: loadedTheme)
+                    }
                 }
+            } else {
+                 DispatchQueue.main.async {
+                    self.errorMessage = "Theme loaded but ID mismatch or nil."
+                 }
             }
         } catch {
-            print("Failed to load theme: \(error)")
+            DispatchQueue.main.async {
+                self.errorMessage = "Failed to load theme: \(error.localizedDescription)"
+            }
         }
     }
 
     func generatePuzzle(theme: ThemeDefinition? = nil) {
         guard let t = theme ?? self.theme else { return }
-        self.puzzle = PuzzleGenerator.shared.generatePuzzle(difficulty: self.difficulty, theme: t)
-        self.userState = [:]
+
+        // Ensure this is not blocking if called directly on main
+        let p = PuzzleGenerator.shared.generatePuzzle(difficulty: self.difficulty, theme: t)
+
+        if Thread.isMainThread {
+            self.puzzle = p
+            self.userState = [:]
+        } else {
+            DispatchQueue.main.async {
+                self.puzzle = p
+                self.userState = [:]
+            }
+        }
 
         AnalyticsManager.shared.trackEvent(name: "puzzle_start", params: ["theme": t.id, "difficulty": difficulty.rawValue])
     }
 
     func startDailyChallenge(theme: ThemeDefinition) {
         let seed = DailyChallengeManager.shared.getDailySeed()
-        self.puzzle = PuzzleGenerator.shared.generatePuzzle(difficulty: .hard, theme: theme, seed: seed)
-        self.userState = [:]
+        let p = PuzzleGenerator.shared.generatePuzzle(difficulty: .hard, theme: theme, seed: seed)
+
+        if Thread.isMainThread {
+             self.puzzle = p
+             self.userState = [:]
+        } else {
+            DispatchQueue.main.async {
+                self.puzzle = p
+                self.userState = [:]
+            }
+        }
 
         AnalyticsManager.shared.trackEvent(name: "daily_challenge_start", params: ["seed": seed])
     }
