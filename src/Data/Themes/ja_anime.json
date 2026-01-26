@@ -10,7 +10,9 @@
         { "id": "h1", "name": "Ninja", "icon": "hero_ninja" },
         { "id": "h2", "name": "Samurai", "icon": "hero_samurai" },
         { "id": "h3", "name": "Esper", "icon": "hero_esper" },
-        { "id": "h4", "name": "Mecha Pilot", "icon": "hero_pilot" }
+        { "id": "h4", "name": "Mecha Pilot", "icon": "hero_pilot" },
+        { "id": "h5", "name": "Archer", "icon": "hero_archer" },
+        { "id": "h6", "name": "Beast", "icon": "hero_beast" }
       ]
     },
     "power": {
@@ -19,7 +21,9 @@
         { "id": "p1", "name": "Fire", "icon": "power_fire" },
         { "id": "p2", "name": "Ice", "icon": "power_ice" },
         { "id": "p3", "name": "Lightning", "icon": "power_bolt" },
-        { "id": "p4", "name": "Shadow", "icon": "power_shadow" }
+        { "id": "p4", "name": "Shadow", "icon": "power_shadow" },
+        { "id": "p5", "name": "Light", "icon": "power_light" },
+        { "id": "p6", "name": "Time", "icon": "power_time" }
       ]
     },
     "weapon": {
@@ -28,7 +32,9 @@
         { "id": "w1", "name": "Katana", "icon": "weapon_katana" },
         { "id": "w2", "name": "Shuriken", "icon": "weapon_star" },
         { "id": "w3", "name": "Staff", "icon": "weapon_staff" },
-        { "id": "w4", "name": "Robot", "icon": "weapon_robot" }
+        { "id": "w4", "name": "Robot", "icon": "weapon_robot" },
+        { "id": "w5", "name": "Bow", "icon": "weapon_bow" },
+        { "id": "w6", "name": "Shield", "icon": "weapon_shield" }
       ]
     },
     "location": {
@@ -37,7 +43,31 @@
         { "id": "l1", "name": "Tokyo", "icon": "loc_tokyo" },
         { "id": "l2", "name": "Osaka", "icon": "loc_osaka" },
         { "id": "l3", "name": "Kyoto", "icon": "loc_kyoto" },
-        { "id": "l4", "name": "Akihabara", "icon": "loc_akiba" }
+        { "id": "l4", "name": "Akihabara", "icon": "loc_akiba" },
+        { "id": "l5", "name": "Sapporo", "icon": "loc_sapporo" },
+        { "id": "l6", "name": "Okinawa", "icon": "loc_okinawa" }
+      ]
+    },
+    "rival": {
+      "name": "Rival",
+      "items": [
+        { "id": "r1", "name": "Demon", "icon": "rival_demon" },
+        { "id": "r2", "name": "Alien", "icon": "rival_alien" },
+        { "id": "r3", "name": "Cyborg", "icon": "rival_cyborg" },
+        { "id": "r4", "name": "Ghost", "icon": "rival_ghost" },
+        { "id": "r5", "name": "Dragon", "icon": "rival_dragon" },
+        { "id": "r6", "name": "Vampire", "icon": "rival_vampire" }
+      ]
+    },
+    "color": {
+      "name": "Color",
+      "items": [
+        { "id": "c1", "name": "Red", "icon": "color_red" },
+        { "id": "c2", "name": "Blue", "icon": "color_blue" },
+        { "id": "c3", "name": "Gold", "icon": "color_gold" },
+        { "id": "c4", "name": "Silver", "icon": "color_silver" },
+        { "id": "c5", "name": "Black", "icon": "color_black" },
+        { "id": "c6", "name": "White", "icon": "color_white" }
       ]
     }
   },
